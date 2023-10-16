@@ -1,0 +1,27 @@
+---
+# network_topology.yml
+subnets:  # multiple of these
+  - name: "purple"  # the ns to be created
+    subnet_ip: "10.1.1.0"
+    bridge: yes
+    cidr: "/24"
+    gw: "10.1.1.1"
+    dhcp_range: "10.1.1.21,10.1.1.150"
+    hosts:  # list of hosts to create
+      - name: "phost"
+        # other properties to come!
+
+  - name: "purple-core"
+    subnet_ip: "10.1.5.0"
+    bridge: no
+    cidr: "/30"
+    gw: "10.1.5.1"
+    dhcp_range: null   # core network does not have DHCP only static assignments
+    
+routers:   # multiple of these
+  - name: "core"
+    interfaces:
+      - name: "to-purple-core"
+        ip: "10.1.5.1"
+      - name: "to-orange-core"
+        ip: "10.1.5.13"
