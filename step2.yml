@@ -1,0 +1,37 @@
+---
+- hosts: localhost
+  become: true
+  vars_files:
+    - /home/student/final  # Change this to your real YAML file path
+
+  tasks:
+
+  - name: Create a namespace named mario
+    community.general.ip_netns:
+      name: mario
+      state: present
+
+  - name: Create veth pair
+    command: ip link add {{ item.name }} type veth peer name {{ item.peer }}
+    with_items: "{{ veth_pairs }}"
+
+  - name: Attach veth endpoints to namespaces
+    command: ip link set {{ item.veth }} netns {{ item.netns }}
+    with_items: "{{ veth_to_netns }}"
+
+  - name: Setup IP addresses for veth endpoints
+    command: ip netns exec {{ item.netns }} ip address add {{ item.ip }} dev {{ item.dev }}
+    with_items: "{{ veth_ips }}"
+
+  - name: Create Linux bridges
+    command: ip link add name {{ item }} type bridge
+    with_items: "{{ bridges }}"
+
+  - name: Setup IP addresses for bridges
+    command: ip address add {{ item.ip }} dev {{ item.dev }}
+    with_items: "{{ bridge_ips }}"
+
+  - name: Add nftables rules
+    command: nft {{ item }}
+    with_items: "{{ nft_rules }}"
+...
