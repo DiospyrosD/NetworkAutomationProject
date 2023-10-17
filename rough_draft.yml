@@ -1,0 +1,27 @@
+```yaml
+my_vars:
+  ohost: value1
+  phost: value2
+  whost: value3
+  yhost: value4
+```
+2. Modify your Jinja template, `netns_commands.j2`, to use the variables from the vars file:
+```jinja
+{% for key, value in my_vars.items() %}
+sudo ip netns add {{ key }} -{{ value }},
+{% endfor %}
+```
+3. Update your Ansible playbook to include the vars file and use the template module:
+```yaml
+- name: Create network namespaces
+  hosts: localhost
+  vars_files:
+    - my_vars.yml
+  tasks:
+    - name: Generate commands
+      template:
+        src: netns_commands.j2
+        dest: /tmp/netns_commands.sh
+    - name: Execute commands
+      command: sh /tmp/netns_commands.sh
+```
