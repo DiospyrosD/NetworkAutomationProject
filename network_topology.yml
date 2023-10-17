@@ -11,7 +11,7 @@ subnets:  # multiple of these
       - name: "phost"
         # other properties to come!
 
-  - name: "subnet1-core"
+  - namespace: "subnet1-core"
     subnet_ip: "10.1.5.0"
     bridge: no
     cidr: "/30"
