@@ -1,7 +1,7 @@
 ---
 # network_topology.yml
 subnets:  # multiple of these
-  - name: "purple"  # the ns to be created
+  - namespace: "purple"  # the ns to be created
     subnet_ip: "10.1.1.0"
     bridge: yes
     cidr: "/24"
@@ -19,7 +19,7 @@ subnets:  # multiple of these
     dhcp_range: null   # core network does not have DHCP only static assignments
     
 routers:   # multiple of these
-  - name: "core"
+  - namespace: "core"
     interfaces:
       - name: "to-purple-core"
         ip: "10.1.5.1"
