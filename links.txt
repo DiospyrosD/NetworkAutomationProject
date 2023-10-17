@@ -1,1 +1,3 @@
 https://www.yamllint.com/
+
+set up python/ansible linting: https://github.com/rzfeeser/ansible-github-actions
