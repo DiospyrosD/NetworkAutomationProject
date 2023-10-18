@@ -1,0 +1,6 @@
+{% for item in network.subnets %}
+{% if item.switch %}
+sudo ip link set {{item.subnet_id}}_sw netns {{item.subnet_id}}
+{% endif %}
+{% endfor %}
+~                
