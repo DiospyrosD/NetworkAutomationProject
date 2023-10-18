@@ -72,11 +72,11 @@ network:
         - subnet_id: "to-zulu-core"
           ip: "10.1.5.13"
 
-      hosts:
-        - name: whiskey_host
-          interfaces:
-          - name: <ifacename>
-            ip_addr: 10.1.1.21
-          default_route: 10.1.1.1
-          adjacent:
-            - purple
+    hosts:
+      - name: whiskey_host
+        interfaces:
+        - name: <ifacename>
+          ip_addr: 10.1.1.21
+        default_route: 10.1.1.1
+        adjacent:
+          - purple
