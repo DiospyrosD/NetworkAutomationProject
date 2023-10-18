@@ -7,12 +7,37 @@
   tasks:
 
   - debug:
-      msg: "Let's see what we got: {{subnets[0].name}}"
+      msg: "Let's find the namespaces:"
 
   - name: Create a namespace named subnet1
     community.general.ip_netns:
-      name: "{{item.name}}"
+      name: "{{item.subnet_id}}"
       state: present
-    loop: "{{subnets}}"
-    when: "'-core' not in item.name"
-                               
+    loop: "{{network.subnets}}"
+    when: item.switch==true
+
+  - debug:
+      msg: "Let's see if we can make some ovs internal interfaces: "
+
+  - name: Create OVS bridges
+    openvswitch.openvswitch.openvswitch_bridge:
+      bridge: "{{item.subnet_id}}_sw"
+      state: present
+    loop: "{{network.subnets}}"
+    when: item.switch==true
+
+  - debug:
+      msg: "Let's see if we can make some ovs internal interfaces:"
+
+  - name: Create OVS internal interfaces
+    openvswitch.openvswitch.openvswitch_port:
+      bridge: "{{item.subnet_id}}"
+      port: "{{item.subnet_id}}_sw_p"
+      state: present
+    loop: "{{network.subnets}}"
+    when: item.switch==true
+      
+   - name: Generate commands
+      template:
+        src: netns_commands.j2
+        dest: /tmp/netns_commands.sh
