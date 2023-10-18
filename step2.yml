@@ -31,13 +31,16 @@
 
   - name: Create OVS internal interfaces
     openvswitch.openvswitch.openvswitch_port:
-      bridge: "{{item.subnet_id}}"
+      bridge: "{{item.subnet_id}}_sw"
       port: "{{item.subnet_id}}_sw_p"
       state: present
     loop: "{{network.subnets}}"
     when: item.switch==true
-      
-   - name: Generate commands
-      template:
-        src: netns_commands.j2
-        dest: /tmp/netns_commands.sh
+
+  - name: Connect ovs interfaces to namespaces -- create tmp file
+    template:
+      src: int_to_ns.j2
+      dest: /tmp/int_to_ns.sh
+
+  - name: Connect ovs interfaces to namespaces -- execute file
+    script: /tmp/int_to_ns.sh
