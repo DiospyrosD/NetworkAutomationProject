@@ -79,4 +79,25 @@ network:
           ip_addr: 10.1.1.21
         default_route: 10.1.1.1
         adjacent:
-          - purple
+          - whiskey
+      - name: xray_host
+        interfaces:
+        - name: <ifacename>
+          ip_addr: 10.1.2.21
+        default_route: 10.1.2.1
+        adjacent:
+          - xray
+      - name: yankee_host
+        interfaces:
+        - name: <ifacename>
+          ip_addr: 10.1.3.21
+        default_route: 10.1.3.1
+        adjacent:
+          - yankee
+      - name: zulu_host
+        interfaces:
+        - name: <ifacename>
+          ip_addr: 10.1.4.21
+        default_route: 10.1.4.1
+        adjacent:
+          - zulu
