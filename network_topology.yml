@@ -1,27 +1,45 @@
 ---
 # network_topology.yml
 subnets:  # multiple of these
-  - name: "subnet1"  # the ns to be created
+  - name: "alpha"  # the ns to be created
     subnet_ip: "10.1.1.0"
     bridge: yes
     cidr: "/24"
     gw: "10.1.1.1"
     dhcp_range: "10.1.1.21,10.1.1.150"
     hosts:  # list of hosts to create
-      - name: "phost"
+      - name: "ahost"
         # other properties to come!
-
-  - name: "subnet1-core"
+        
+  - name: "alpha-core"
     subnet_ip: "10.1.5.0"
     bridge: no
     cidr: "/30"
     gw: "10.1.5.1"
     dhcp_range: null   # core network does not have DHCP only static assignments
     
+subnets:  # multiple of these
+  - name: "bravo"  # the ns to be created
+    subnet_ip: "10.1.2.0"
+    bridge: yes
+    cidr: "/24"
+    gw: "10.1.2.1"
+    dhcp_range: "10.1.2.21,10.1.2.150"
+    hosts:  # list of hosts to create
+      - name: "ahost"
+        # other properties to come!
+
+  - name: "bravo-core"
+    subnet_ip: "10.1.5.4"
+    bridge: no
+    cidr: "/30"
+    gw: "10.1.5.5"
+    dhcp_range: null   # core network does not have DHCP only static assignments
+    
 routers:   # multiple of these
   - name: "core"
     interfaces:
-      - name: "to-subnet1-core"
+      - name: "to-alpha-core"
         ip: "10.1.5.1"
-      - name: "to-subnet2-core"
-        ip: "10.1.5.13"
+      - name: "to-bravo-core"
+        ip: "10.1.5.5"
