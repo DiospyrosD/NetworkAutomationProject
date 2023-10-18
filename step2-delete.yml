@@ -1,0 +1,17 @@
+---
+- hosts: localhost
+  become: true
+  vars_files:
+    - /home/student/final/network_topology.yml  # Change this to your real YAML file path
+
+  tasks:
+
+  - debug:
+      msg: "Let's see what we got: {{subnets[0].name}}"
+
+  - name: Create a namespace named subnet1
+    community.general.ip_netns:
+      name: "{{item.name}}"
+      state: absent
+    loop: "{{subnets}}"
+    when: "'-core' not in item.name"
