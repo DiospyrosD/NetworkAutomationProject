@@ -1,7 +1,7 @@
 ---
 # network_topology.yml
 subnets:  # multiple of these
-  - namespace: "subnet1"  # the ns to be created
+  - name: "subnet1"  # the ns to be created
     subnet_ip: "10.1.1.0"
     bridge: yes
     cidr: "/24"
@@ -11,7 +11,7 @@ subnets:  # multiple of these
       - name: "phost"
         # other properties to come!
 
-  - namespace: "subnet1-core"
+  - name: "subnet1-core"
     subnet_ip: "10.1.5.0"
     bridge: no
     cidr: "/30"
@@ -19,7 +19,7 @@ subnets:  # multiple of these
     dhcp_range: null   # core network does not have DHCP only static assignments
     
 routers:   # multiple of these
-  - namespace: "core"
+  - name: "core"
     interfaces:
       - name: "to-subnet1-core"
         ip: "10.1.5.1"
