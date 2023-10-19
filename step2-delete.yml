@@ -14,7 +14,6 @@
       name: "{{item.subnet_id}}"
       state: absent
     loop: "{{network.subnets}}"
-    when: item.switch==true
 
   - debug:
       msg: "Let's see if we can make some ovs internal interfaces: "
@@ -24,4 +23,9 @@
       bridge: "{{item.subnet_id}}_sw"
       state: absent
     loop: "{{network.subnets}}"
-    when: item.switch==true
+  
+  - name: Delete hosts
+    community.general.ip_netns:
+      name: "{{ item.name }}"
+      state: absent
+    loop: "{{ network.hosts }}"
