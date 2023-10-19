@@ -26,21 +26,26 @@
     loop: "{{network.subnets}}"
     when: item.switch==true
 
-  - debug:
-      msg: "Let's see if we can make some ovs internal interfaces:"
+  # - debug:
+  #     msg: "Let's see if we can make some ovs internal interfaces:"
 
-  - name: Create OVS internal interfaces
-    openvswitch.openvswitch.openvswitch_port:
-      bridge: "{{item.subnet_id}}_sw"
-      port: "{{item.subnet_id}}_sw_p"
-      state: present
-    loop: "{{network.subnets}}"
-    when: item.switch==true
+  # - name: Create OVS internal interfaces
+  #   openvswitch.openvswitch.openvswitch_port:
+  #     bridge: "{{item.subnet_id}}_sw"
+  #     port: "{{item.subnet_id}}_sw_p"
+  #     state: present
+  #   loop: "{{network.subnets}}"
+  #   when: item.switch==true
 
-  - name: Connect ovs interfaces to namespaces -- create tmp file
+  - name: build switches -- create tmp file
     template:
-      src: int_to_ns.j2
-      dest: /tmp/int_to_ns.sh
+      src: build_switch.j2
+      dest: /tmp/build_switch.sh
 
-  - name: Connect ovs interfaces to namespaces -- execute file
-    script: /tmp/int_to_ns.sh
+  - name: build switch -- execute file
+    script: /tmp/build_switch.sh
+
+  - name: build router -- create tmp file
+    template:
+      src: build_router.j2
+      dest: /tmp/build_router.sh
