@@ -1,6 +1,5 @@
 {% for item in network.subnets %}
-{% if item.switch %}
-{% set parts = item.gw.split('.') %}
+{% set parts = item.subnet_ip.split('.') %}
 {% set last_octet = parts[-1] | int %}
 {% set incremented_last_octet = last_octet + 1 %}
 {% set modified_parts = parts[:-1] + [incremented_last_octet | string] %}
@@ -10,5 +9,4 @@ sudo ip netns exec {{ item.subnet_id }} ip link set dev {{item.subnet_id}}_sw_p1
 sudo ip netns exec {{item.subnet_id}} ip link set dev lo up
 sudo ip netns exec {{item.subnet_id}} ip addr add {{ modified_parts | join('.') }}{{ item.cidr }} dev {{ item.subnet_id }}_sw_p1
 sudo ovs-vsctl set port {{item.subnet_id}}_sw_p1 tag={{ item.vlan }}
-{% endif %}
-{% endfor %}                
+{% endfor %}           
