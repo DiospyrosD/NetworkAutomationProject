@@ -49,3 +49,11 @@
     template:
       src: build_router.j2
       dest: /tmp/build_router.sh
+
+  - name: build hosts -- create tmp file
+    template:
+      src: build_hosts.j2
+      dest: /tmp/build_hosts.sh
+
+  - name: build hosts -- execute file
+    script: /tmp/build_hosts.sh
