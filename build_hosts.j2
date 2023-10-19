@@ -1,0 +1,14 @@
+{% for host in network.hosts %}
+{% for subnet in network.subnets %}
+{% if host.vlan == subnet.vlan %}
+sudo ip netns add {{ host.name }}
+sudo ovs-vsctl add-port {{ subnet.subnet_id }}_sw {{ host.name }} -- set interface {{ host.name }} type=internal
+sudo ip link set {{ host.name }} netns {{ host.name }}
+sudo ip netns exec {{ host.name }} ip link set dev {{ host.name }} up
+sudo ip netns exec {{ host.name }} ip link set dev lo up
+sudo ip netns exec {{ host.name }} ip addr add {{ host.interfaces[0].ip_addr }}{{ subnet.cidr }} dev {{ host.name }}
+sudo ovs-vsctl set port {{ host.name }} tag={{ host.vlan }}
+sudo ip netns exec {{ host.name }} ip route add default via {{ host.default_route }}
+{% endif %}
+{% endfor %}
+{% endfor %}
