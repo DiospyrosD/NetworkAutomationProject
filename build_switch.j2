@@ -1,7 +1,7 @@
 {% for item in network.subnets %}
 {% set parts = item.subnet_ip.split('.') %}
 {% set last_octet = parts[-1] | int %}
-{% set incremented_last_octet = last_octet + 1 %}
+{% set incremented_last_octet = last_octet + 2 %}
 {% set modified_parts = parts[:-1] + [incremented_last_octet | string] %}
 sudo ovs-vsctl add-port {{item.subnet_id}}_sw {{item.subnet_id}}_sw_p1 -- set interface {{item.subnet_id}}_sw_p1 type=internal
 sudo ip link set {{ item.subnet_id }}_sw_p1 netns {{ item.subnet_id }}
