@@ -37,31 +37,30 @@ network:
       interfaces:
 
   hosts:
-    - name: whiskey_host
+    - name: whiskey_host_10
       interfaces:
       - name: <ifacename>
         ip_addr: 10.1.1.21
       default_route: 10.1.1.1
-      adjacent:
-        - whiskey
-    - name: xray_host
+      vlan: 10
+      
+    - name: xray_host_20
       interfaces:
       - name: <ifacename>
         ip_addr: 10.1.2.21
       default_route: 10.1.2.1
-      adjacent:
-        - xray
-    - name: yankee_host
+      vlan: 20
+      
+    - name: yankee_host_30
       interfaces:
       - name: <ifacename>
         ip_addr: 10.1.3.21
       default_route: 10.1.3.1
-      adjacent:
-        - yankee
-    - name: zulu_host
+      vlan: 30
+        
+    - name: zulu_host_40
       interfaces:
       - name: <ifacename>
         ip_addr: 10.1.4.21
       default_route: 10.1.4.1
-      adjacent:
-        - zulu
+      vlan: 40
