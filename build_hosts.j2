@@ -1,4 +1,8 @@
-{% for host in network.hosts %}
+{% for item in network.subnets %}
+sudo ip netns exec {{ item.subnet_id }} --interface={{ item.subnet_id }}_sw_p1 --dhcp-range={{ item.dhcp_range }},{{ item.cidr }}
+{% endfor %}
+
+{%for host in network.hosts %}
 {% for subnet in network.subnets %}
 {% if host.vlan == subnet.vlan %}
 sudo ip netns add {{ host.name }}
