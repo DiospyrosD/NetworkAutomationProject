@@ -6,28 +6,24 @@ network:
   subnets:  # multiple of these
     - subnet_id: "whiskey"  # the ns to be created
       subnet_ip: "10.1.1.0"
-      switch: yes
       cidr: "/24"
       dhcp_range: "10.1.1.21,10.1.1.150"
       vlan: 10
       
     - subnet_id: "xray"  # the ns to be created
       subnet_ip: "10.1.2.0"
-      switch: yes
       cidr: "/24"
       dhcp_range: "10.1.2.21,10.1.2.150"
       vlan: 20
   
     - subnet_id: "yankee"  # the ns to be created
       subnet_ip: "10.1.3.0"
-      switch: yes
       cidr: "/24"
       dhcp_range: "10.1.3.21,10.1.3.150"
       vlan: 30
       
     - subnet_id: "zulu"  # the ns to be created
       subnet_ip: "10.1.4.0"
-      switch: yes
       cidr: "/24"
       dhcp_range: "10.1.4.21,10.1.4.150"
       vlan: 40
