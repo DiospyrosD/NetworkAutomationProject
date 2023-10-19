@@ -1,3 +1,4 @@
+sudo ip netns add {{ network.routers[0].subnet_id }}
 {% for item in network.subnets %}
   {% set parts = item.subnet_ip.split('.') %}
   {% set last_octet = parts[-1] | int %}
