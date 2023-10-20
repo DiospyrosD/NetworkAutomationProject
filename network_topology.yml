@@ -41,7 +41,11 @@ network:
       
   routers:   # multiple of these
     - subnet_id: "core"
-      interfaces:
+      interface1:
+        - host2core: "10.1.10.2"
+        - core2host: "10.1.10.1"
+      sum_subnet: "10.1.0.0/20"
+  
 
   hosts:
     - name: whiskey_host_10
