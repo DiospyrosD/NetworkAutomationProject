@@ -14,7 +14,7 @@
       name: "{{item.subnet_id}}"
       state: present
     loop: "{{network.subnets}}"
-
+    when: item.bridge == "no"
   - debug:
       msg: "Let's see if we can make some ovs internal interfaces: "
 
@@ -23,6 +23,7 @@
       bridge: "{{item.subnet_id}}_sw"
       state: present
     loop: "{{network.subnets}}"
+    when: item.bridge == "no"
 
   # - debug:
   #     msg: "Let's see if we can make some ovs internal interfaces:"
@@ -47,6 +48,9 @@
     template:
       src: build_router.j2
       dest: /tmp/build_router.sh
+
+  - name: build router -- execute tmp file
+    script: /tmp/build_router.sh
 
   - name: build hosts -- create tmp file
     template:
