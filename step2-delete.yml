@@ -24,6 +24,12 @@
       state: absent
     loop: "{{network.subnets}}"
   
+  - name: Delete routers
+    community.general.ip_netns:
+      name: "{{ item.subnet_id }}"
+      state: absent
+    loop: "{{ network.routers }}"
+
   - name: Delete hosts
     community.general.ip_netns:
       name: "{{ item.name }}"
