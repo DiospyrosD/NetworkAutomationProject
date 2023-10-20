@@ -1,6 +1,6 @@
 import subprocess
 import os
-
+import yaml
 
 def main():
     mac1 = create_config()
@@ -54,16 +54,33 @@ def create_config():
     # Create the bridge configuration file
     with open("/etc/qemu/bridge.conf", "w") as bridge_conf_file:
         bridge_conf_file.write("allow br0")
+    
+    # Open the network_topology.yml file to sear for bridge info
+    with open('network_topology.yml', "r") as net_topology:
+        topology_data = yaml.safe_load(net_topology)
+    for item in topology_data['network']['subnets']:
+        if item.get('bridge') == 'yes':        
+            subnet_id = item['subnet_id']
+            subnet_ip = item['subnet_ip']
+            cidr = item['cidr']
 
+            # Calculate the IP address based on the subnet_ip
+            ip_parts = subnet_ip.split('.')
+            if len(ip_parts) == 4:
+                vm_ip = '.'.join(ip_parts[:3] + [str(int(ip_parts[3]) + 2)]) + cidr
+            
+            print(subnet_id)
+            print(subnet_ip)
+            print(cidr)
+            
     # Create a bridge interface (br0)
-    subprocess.run(["sudo", "ip", "link", "add", "name", "br0", "type", "bridge"])
-    subprocess.run(["sudo", "ip", "address", "add", "172.16.0.1/24", "dev", "br0"])
+    subprocess.run(["sudo", "ip", "link", "add", "name", subnet_id, "type", "bridge"])
+    subprocess.run(["sudo", "ip", "address", "add", vm_ip, "dev", "br0"])
     subprocess.run(["sudo", "ip", "link", "set", "br0", "up"])
 
     # Create the /var/kvm/images directory and change its ownership
     subprocess.run(["sudo", "mkdir", "-p", "/var/kvm/images"])
     subprocess.run(["sudo", "chown", "student:student", "/var/kvm/images"])
-    os.chdir("/var/kvm/images")
 
     # Download and prepare the VM image
     subprocess.run(["wget", "https://static.alta3.com/projects/kvm/bionic-server-cloudimg-amd64.img"])
