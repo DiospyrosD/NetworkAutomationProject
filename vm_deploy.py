@@ -3,10 +3,10 @@ import os
 import yaml
 
 def main():
-    mac1 = create_config()
+    mac1,subnet_id = create_config()
     install_packages()
     create_config()
-    launch_vm(mac1)
+    launch_vm(mac1,subnet_id)
 
 
 
@@ -51,10 +51,6 @@ def create_config():
     # Create the /etc/qemu/ directory if it doesn't exist
     subprocess.run(["sudo", "mkdir", "-p", "/etc/qemu"])
 
-    # Create the bridge configuration file
-    with open("/etc/qemu/bridge.conf", "w") as bridge_conf_file:
-        bridge_conf_file.write("allow br0")
-    
     # Open the network_topology.yml file to sear for bridge info
     with open('network_topology.yml', "r") as net_topology:
         topology_data = yaml.safe_load(net_topology)
@@ -68,22 +64,25 @@ def create_config():
             ip_parts = subnet_ip.split('.')
             if len(ip_parts) == 4:
                 vm_ip = '.'.join(ip_parts[:3] + [str(int(ip_parts[3]) + 2)]) + cidr
+
+    # Create the bridge configuration file
+    with open("/etc/qemu/bridge.conf", "w") as bridge_conf_file:
+        bridge_conf_file.write("allow " + subnet_id)
             
-            print(subnet_id)
-            print(subnet_ip)
-            print(cidr)
             
     # Create a bridge interface (br0)
     subprocess.run(["sudo", "ip", "link", "add", "name", subnet_id, "type", "bridge"])
-    subprocess.run(["sudo", "ip", "address", "add", vm_ip, "dev", "br0"])
-    subprocess.run(["sudo", "ip", "link", "set", "br0", "up"])
+    subprocess.run(["sudo", "ip", "address", "add", vm_ip, "dev", subnet_id])
+    subprocess.run(["sudo", "ip", "address", "add", "172.16.0.2/24", "dev", "br0"])
+    subprocess.run(["sudo", "ip", "link", "set", subnet_id, "up"])
 
     # Create the /var/kvm/images directory and change its ownership
     subprocess.run(["sudo", "mkdir", "-p", "/var/kvm/images"])
-    subprocess.run(["sudo", "chown", "student:student", "/var/kvm/images"])
-
+    result = os.popen("whoami").read().strip()
+    subprocess.run(["sudo", "chown", f"{result}:{result}", "/var/kvm/images"])
     # Download and prepare the VM image
-    subprocess.run(["wget", "https://static.alta3.com/projects/kvm/bionic-server-cloudimg-amd64.img"])
+    if not os.path.exists("bionic-server-cloudimg-amd64.img"):
+        subprocess.run(["wget", "https://static.alta3.com/projects/kvm/bionic-server-cloudimg-amd64.img"])
     subprocess.run(["qemu-img", "resize", "bionic-server-cloudimg-amd64.img", "8g"])
     subprocess.run(["qemu-img", "convert", "-O", "qcow2", "/var/kvm/images/bionic-server-cloudimg-amd64.img", "/var/kvm/images/beachhead.img"])
 
@@ -113,9 +112,9 @@ def create_config():
     subprocess.run(["sudo", "/sbin/iptables", "-A", "FORWARD", "-i", "ens3", "-o", "br0", "-m", "state", "--state", "RELATED,ESTABLISHED", "-j", "ACCEPT"])
     subprocess.run(["sudo", "/sbin/iptables", "-A", "FORWARD", "-i", "br0", "-o", "ens3", "-j", "ACCEPT"])
     
-    return mac1
+    return mac1, subnet_id
 
-def launch_vm(mac1):
+def launch_vm(mac1, subnet_id):
     # Start the VM
     subprocess.run([
         "sudo", "/usr/bin/qemu-system-x86_64",
@@ -127,7 +126,7 @@ def launch_vm(mac1):
         "-smp", "cpus=1",
         "-m", "1G",
         "-net", "nic,netdev=tap1,macaddr=" + mac1,
-        "-netdev", "bridge,id=tap1,br=br0",
+        "-netdev", "bridge,id=tap1,br=" + subnet_id,
         "-d", "int",
         "-D", "/var/log/qemu/qemu.log"
     ])
