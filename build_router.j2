@@ -8,6 +8,7 @@ sudo ip netns add {{ network.routers[0].subnet_id }}
   sudo ovs-vsctl add-port {{ item.subnet_id }}_sw core_{{ item.vlan }} -- set interface core_{{ item.vlan }} type=internal
   sudo ip link set core_{{ item.vlan }} netns {{ network.routers[0].subnet_id }}
   sudo ip netns exec {{ network.routers[0].subnet_id }} ip link set dev core_{{ item.vlan }} up
-  sudo ip netns exec {{ network.routers[0].subnet_id }} ip addr add {{ modified_parts | join('.') }}{{ item.cidr }} dev {{ item.subnet_id }}_sw_{{ item.vlan }}
+  sudo ip netns exec {{ network.routers[0].subnet_id }} ip addr add {{ modified_parts | join('.') }}{{ item.cidr }} dev core_{{ item.vlan }}
   sudo ovs-vsctl set port core_{{ item.vlan }} tag={{ item.vlan }}
 {% endfor %}
+
