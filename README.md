@@ -2,7 +2,10 @@
 Our Final CAP Project
 
 # Descriptions
-network_topology file: The SoC (Source of truth) for this project. This is the file where we will define our network infrastructure. Subnets, routers, and hosts can be added here. The playbook will scan through this file for names, IP, addresses, and such.
+**network_topology file -** The SoC (Source of truth) for this project. This is the file where we will define our network infrastructure. Subnets, routers, and hosts can be added here. The playbook will scan through this file for names, IP, addresses, and such.\
+**build_router.j2 -** Jinja template to create routers from the topology file.\
+**build_switches.j2 -** Jinja template to create switches from the topology file.\
+**build_hosts.j2 -** Jinja template to create hosts from the topology file.\
 
 # Instructions
 - cd into whichever directory you would like to download the project into.
