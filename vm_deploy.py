@@ -3,8 +3,8 @@ import os
 import yaml
 
 def main():
-    mac1,subnet_id = create_config()
     install_packages()
+    mac1,subnet_id = create_config()
     create_config()
     launch_vm(mac1,subnet_id)
 
