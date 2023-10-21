@@ -63,6 +63,7 @@ def create_config():
             # Calculate the IP address based on the subnet_ip
             ip_parts = subnet_ip.split('.')
             if len(ip_parts) == 4:
+                bridge_ip_no_cidr = '.'.join(ip_parts[:3] + [str(int(ip_parts[3]) + 1)])
                 bridge_ip = '.'.join(ip_parts[:3] + [str(int(ip_parts[3]) + 1)]) + cidr #changed the name from vm_ip to bridge_ip and changed from added +2 to +1
 
     # Create the bridge configuration file
@@ -102,7 +103,7 @@ def create_config():
 
     # Create the net-config.yaml file
     with open("/var/kvm/images/net-config.yaml", "w") as net_config_file:
-        net_config_file.write("version: 2\nethernets:\n    ens3:\n      dhcp4: false\n      addresses:\n      - 10.1.5.21/24\n      optional: true\n      gateway4: bridge_ip\n      nameservers:\n        addresses: [10.0.0.1]")
+        net_config_file.write(f"version: 2\nethernets:\n    ens3:\n      dhcp4: false\n      addresses:\n      - 10.1.5.21/24\n      optional: true\n      gateway4: {bridge_ip_no_cidr}\n      nameservers:\n        addresses: [10.0.0.1]")
 
     # Create the cloud-init.iso
     subprocess.run(["cloud-localds", "/var/kvm/images/cloud-init.iso", "/var/kvm/images/user-data.yaml", "/var/kvm/images/meta-data.yaml", "--network-config=/var/kvm/images/net-config.yaml"])
@@ -112,7 +113,7 @@ def create_config():
     subprocess.run(["sudo", "/sbin/iptables", "-A", "FORWARD", "-i", "ens3", "-o", "br0", "-m", "state", "--state", "RELATED,ESTABLISHED", "-j", "ACCEPT"])
     subprocess.run(["sudo", "/sbin/iptables", "-A", "FORWARD", "-i", "br0", "-o", "ens3", "-j", "ACCEPT"])
     
-    return mac1, subnet_id, bridge_ip #added bridge_ip to be returned
+    return mac1, subnet_id #added bridge_ip to be returned
 
 def launch_vm(mac1, subnet_id):
     # Start the VM
