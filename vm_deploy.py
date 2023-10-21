@@ -63,7 +63,7 @@ def create_config():
             # Calculate the IP address based on the subnet_ip
             ip_parts = subnet_ip.split('.')
             if len(ip_parts) == 4:
-                vm_ip = '.'.join(ip_parts[:3] + [str(int(ip_parts[3]) + 2)]) + cidr
+                bridge_ip = '.'.join(ip_parts[:3] + [str(int(ip_parts[3]) + 1)]) + cidr #changed the name from vm_ip to bridge_ip and changed from added +2 to +1
 
     # Create the bridge configuration file
     with open("/etc/qemu/bridge.conf", "w") as bridge_conf_file:
@@ -72,8 +72,8 @@ def create_config():
             
     # Create a bridge interface (br0)
     subprocess.run(["sudo", "ip", "link", "add", "name", subnet_id, "type", "bridge"])
-    subprocess.run(["sudo", "ip", "address", "add", vm_ip, "dev", subnet_id])
-    subprocess.run(["sudo", "ip", "address", "add", "172.16.0.2/24", "dev", "br0"])
+    #subprocess.run(["sudo", "ip", "address", "add", vm_ip, "dev", subnet_id]) #commented out this line
+    subprocess.run(["sudo", "ip", "address", "add", bridge_ip, "dev", "br0"]) #changed the hardcoded IP to bridge_ip
     subprocess.run(["sudo", "ip", "link", "set", subnet_id, "up"])
 
     # Create the /var/kvm/images directory and change its ownership
@@ -102,7 +102,7 @@ def create_config():
 
     # Create the net-config.yaml file
     with open("/var/kvm/images/net-config.yaml", "w") as net_config_file:
-        net_config_file.write("version: 2\nethernets:\n    ens3:\n      dhcp4: false\n      addresses:\n      - 172.16.0.5/24\n      optional: true\n      gateway4: 172.16.0.1\n      nameservers:\n        addresses: [10.0.0.1]")
+        net_config_file.write("version: 2\nethernets:\n    ens3:\n      dhcp4: false\n      addresses:\n      - 10.1.5.21/24\n      optional: true\n      gateway4: bridge_ip\n      nameservers:\n        addresses: [10.0.0.1]")
 
     # Create the cloud-init.iso
     subprocess.run(["cloud-localds", "/var/kvm/images/cloud-init.iso", "/var/kvm/images/user-data.yaml", "/var/kvm/images/meta-data.yaml", "--network-config=/var/kvm/images/net-config.yaml"])
@@ -112,7 +112,7 @@ def create_config():
     subprocess.run(["sudo", "/sbin/iptables", "-A", "FORWARD", "-i", "ens3", "-o", "br0", "-m", "state", "--state", "RELATED,ESTABLISHED", "-j", "ACCEPT"])
     subprocess.run(["sudo", "/sbin/iptables", "-A", "FORWARD", "-i", "br0", "-o", "ens3", "-j", "ACCEPT"])
     
-    return mac1, subnet_id
+    return mac1, subnet_id, bridge_ip #added bridge_ip to be returned
 
 def launch_vm(mac1, subnet_id):
     # Start the VM
