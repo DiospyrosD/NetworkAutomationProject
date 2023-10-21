@@ -6,17 +6,11 @@
 
   tasks:
 
-  - debug:
-      msg: "Let's find the namespaces:"
-
   - name: Delete namespaces
     community.general.ip_netns:
       name: "{{item.subnet_id}}"
       state: absent
     loop: "{{network.subnets}}"
-
-  - debug:
-      msg: "Let's see if we can make some ovs internal interfaces: "
 
   - name: Delete OVS bridges and ports
     openvswitch.openvswitch.openvswitch_bridge:
@@ -36,5 +30,9 @@
       state: absent
     loop: "{{ network.hosts }}"
 
-  - name: Delete KVM VM
-    command: sudo bash vm_delete.sh
+  - name: Delete KVM VM Bridge(s)
+    command: sudo ip link del dev br0
+
+  - name: Remove port forwarding for the flask server as a security measure
+    command: sudo iptables -P FORWARD DROP && sudo iptables -F FORWARD && sudo iptables -t nat -F
+    ignore_errors: yes
