@@ -35,3 +35,6 @@
       name: "{{ item.name }}"
       state: absent
     loop: "{{ network.hosts }}"
+
+  - name: Delete KVM VM Bridge(s)
+    command: sudo ip link del dev br0
