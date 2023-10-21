@@ -84,7 +84,7 @@ def create_config():
     if not os.path.exists("bionic-server-cloudimg-amd64.img"):
         subprocess.run(["wget", "https://static.alta3.com/projects/kvm/bionic-server-cloudimg-amd64.img"])
     subprocess.run(["qemu-img", "resize", "bionic-server-cloudimg-amd64.img", "8g"])
-    subprocess.run(["qemu-img", "convert", "-O", "qcow2", "/var/kvm/images/bionic-server-cloudimg-amd64.img", "/var/kvm/images/beachhead.img"])
+    subprocess.run(["qemu-img", "convert", "-O", "qcow2", "bionic-server-cloudimg-amd64.img", "/var/kvm/images/bionic.img"])
 
     # Create the /var/log/qemu/ directory
     subprocess.run(["sudo", "mkdir", "-p", "/var/log/qemu"])
@@ -119,7 +119,7 @@ def launch_vm(mac1, subnet_id):
     subprocess.run([
         "sudo", "/usr/bin/qemu-system-x86_64",
         "-enable-kvm",
-        "-drive", "file=/var/kvm/images/beachhead.img,if=virtio",
+        "-drive", "file=/var/kvm/images/bionic.img,if=virtio",
         "-cdrom", "/var/kvm/images/cloud-init.iso",
         "-display", "curses",
         "-nographic",
