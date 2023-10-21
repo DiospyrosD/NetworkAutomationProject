@@ -23,5 +23,5 @@ Our Final CAP Project
 - run `ansible-playbook destroy_network.yml` to remove the network from your machine.
 
 - run `sudo python3 vm_deploy.py` to create a VM. The current program allows for 1 VM to be created pulling interface names/IP addresses from the network_topology.yml.
-  * You may be prompted to select `enter` for "OK" to ackoledge a newer version of the kernel is available.
+  * You may be prompted to select `enter` for "OK" to acknowledge a newer version of the kernel is available.
   * The default login is `root` with a password of `alta3`.
