@@ -6,13 +6,11 @@
 {% set modified_parts = parts[:-1] + [incremented_last_octet | string] %}
 {% set incremented_last_octet_1 = last_octet + 1 %}
 {% set modified_parts_1 = parts[:-1] + [incremented_last_octet_1 | string] %}
-sudo ovs-vsctl add-port {{item.subnet_id}}_sw {{item.subnet_id}}_sw_p1 -- set interface {{item.subnet_id}}_sw_p1 type=
-internal
+sudo ovs-vsctl add-port {{item.subnet_id}}_sw {{item.subnet_id}}_sw_p1 -- set interface {{item.subnet_id}}_sw_p1 type=internal
 sudo ip link set {{ item.subnet_id }}_sw_p1 netns {{ item.subnet_id }}
 sudo ip netns exec {{ item.subnet_id }} ip link set dev {{item.subnet_id}}_sw_p1 up
 sudo ip netns exec {{item.subnet_id}} ip link set dev lo up
-sudo ip netns exec {{item.subnet_id}} ip addr add {{ modified_parts | join('.') }}{{ item.cidr }} dev {{ item.subnet_i
-d }}_sw_p1
+sudo ip netns exec {{item.subnet_id}} ip addr add {{ modified_parts | join('.') }}{{ item.cidr }} dev {{ item.subnet_id }}_sw_p1
 sudo ovs-vsctl set port {{item.subnet_id}}_sw_p1 tag={{ item.vlan }}
 sudo ip netns exec {{item.subnet_id}} ip route add default via {{ modified_parts_1 | join('.') }}
 {% endif %}
