@@ -5,18 +5,26 @@
     - network_topology.yml  # Change this to your real YAML file path
 
   tasks:
+  - name: Update APT package cache
+    apt:
+      update_cache: yes
 
-  - debug:
-      msg: "Let's find the namespaces:"
+  - name: Install openvswitch-switch
+    apt:
+      name: openvswitch-switch
+      state: present
 
-  - name: Create a namespace named subnet1
+  - name: Install Flask using Python3 pip
+    ansible.builtin.pip:
+      name: flask 
+    become: yes
+
+  - name: Create a namespaces based on subnet_id
     community.general.ip_netns:
       name: "{{item.subnet_id}}"
       state: present
     loop: "{{network.subnets}}"
     when: item.bridge == "no"
-  - debug:
-      msg: "Let's see if we can make some ovs internal interfaces: "
 
   - name: Create OVS bridges
     openvswitch.openvswitch.openvswitch_bridge:
@@ -25,17 +33,6 @@
     loop: "{{network.subnets}}"
     when: item.bridge == "no"
 
-  # - debug:
-  #     msg: "Let's see if we can make some ovs internal interfaces:"
-
-  # - name: Create OVS internal interfaces
-  #   openvswitch.openvswitch.openvswitch_port:
-  #     bridge: "{{item.subnet_id}}_sw"
-  #     port: "{{item.subnet_id}}_sw_p"
-  #     state: present
-  #   loop: "{{network.subnets}}"
-  #   when: item.switch==true
-
   - name: build switches -- create tmp file
     template:
       src: build_switch.j2
@@ -43,6 +40,7 @@
 
   - name: build switch -- execute file
     script: /tmp/build_switch.sh
+    ignore_errors: yes
 
   - name: build router -- create tmp file
     template:
@@ -59,6 +57,19 @@
 
   - name: build hosts -- execute file
     script: /tmp/build_hosts.sh
+    ignore_errors: yes
+
+  - name: Generate and write the sysctl configuration file
+    shell: echo "net.ipv4.ip_forward = 1\nnet.ipv6.conf.default.forwarding = 1\nnet.ipv6.conf.all.forwarding = 1" > /etc/sysctl.d/10-ip-forwarding.conf
+    # notify: Reload sysctl  # Notify a handler to reload sysctl after making changes
+
+  - name: exec into core namespace and enable forwarding inside the kernel -- create
+    template:
+      src: enable_forwarding_core.j2
+      dest: /tmp/enable_forwarding_core.sh
+
+  - name: exec into core namespace and enable forwarding inside the kernel -- execute
+    script: /tmp/enable_forwarding_core.sh 
 
   - name: set up NAT -- create tmp file
     template:
@@ -67,3 +78,50 @@
 
   - name: set up NAT -- execute file
     script: /tmp/set_up_nat.sh
+
+  - name: Extract and store the subnet_id
+    set_fact:
+      whiskey_id: "{{ network.subnets[0].subnet_id }}"
+
+  - name: Use the subnet_id in a Bash command to run web server in the background
+    command: sudo ip netns exec {{ whiskey_id }} python3 web_server.py &
+    async: 2000  # Set a suitable value for your use case, e.g., 900 seconds (15 minutes)
+    poll: 0
+    register: command_result # just in case
+
+  - name: Add a 5-second delay to give the web server time to spin up
+    ansible.builtin.pause:
+      seconds: 5
+
+  - name: Execute uri module on the whiskey namespace/server
+    ansible.builtin.uri:
+      url: "http://10.1.1.2:9999"
+      return_content: true
+    register: uri_output
+    ignore_errors: yes
+
+  - name: Display curl command output. At this point, we can curl the IP associated with the whiskey namespace (for whiskey this is 10.1.1.2:9999) from within the root namespace
+    debug:
+      var: uri_output.content
+
+  - name: We can access the whiskey namespace from within the root namespace but not externally. We need to create an iptables port forwarding PREROUTING rule so we can access this web server from another root namespace (another VM). It may be interesting to see if we can access this site from our KVM VM
+    command: sudo iptables -t nat -A PREROUTING -i ens3 -p tcp -m tcp --dport 5555 -j DNAT --to-destination 10.1.1.2:9999 #see if we can pull this from topology ughhh
+    register: prerouting_out # just in case
+    ignore_errors: yes
+
+  - name: Next we have to allow forwarding on this particular port. There is a security risk with doing this as our web server is now exposed on port 9999
+    command: sudo iptables -A FORWARD -p tcp -d 10.1.1.2 --dport 9999 -j ACCEPT #see if we can pull this from topology ughhh
+    register: allow_forwarding # just in case
+    ignore_errors: yes
+
+  - name: Run ip command and capture output (i.e., host IP)
+    shell: ip a | grep -o 'inet 10\.[0-9]\+\.[0-9]\+\.[0-9]\+' | awk '{print $2}' | head -n 1
+    register: ip_output
+
+  - name: Print the first IP address
+    debug:
+      var: ip_output.stdout
+  
+  - name: Run SSH command and ignore errors. We've set up the ability to SSH to alpha using RSA keys. This command can fail; it is only to prove a point.
+    script: testscript.sh >> testscript.txt
+    ignore_errors: yes
