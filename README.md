@@ -9,10 +9,10 @@ Our Final CAP Project
 **set_up_nat.j2 -** Jinja template to establish NAT.
   * Create a veth from core to ens3
   * Assign respective IPs
-  * Configure NAT within the POSTROUTING iptable chain,
-  * Create a summarized route for the network topology,
-  * Flush the filter table and nat table,
-  * Add an iptables rule to perform NAT for outgoing packets from the respective IP range, and
+  * Configure NAT within the POSTROUTING iptable chain.
+  * Create a summarized route for the network topology.
+  * Flush the filter table and nat table.
+  * Add an iptables rule to perform NAT for outgoing packets from the respective IP range.
   * Allow forwarding from the ens3 interface (root namespace to the host side of the veth (and vice versa).
 
 # Instructions
