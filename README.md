@@ -6,7 +6,7 @@ Our Final CAP Project
 **build_router.j2 -** Jinja template to create routers from the topology file.\
 **build_switches.j2 -** Jinja template to create switches from the topology file.\
 **build_hosts.j2 -** Jinja template to create hosts from the topology file.\
-**set_up_nat.j2 -** Jinja template to establish NAT.
+**set_up_nat.j2 -** Jinja template to establish NAT. These variables are also pulled from the topology file. See these points below for a better understanding of establishing NAT on this virtual network:
   * Create a veth from core to ens3
   * Assign respective IPs
   * Configure NAT within the POSTROUTING iptable chain.
@@ -16,6 +16,12 @@ Our Final CAP Project
   * Allow forwarding from the ens3 interface (root namespace to the host side of the veth (and vice versa).
 
 # Instructions
+- Please ensure python3, pip, and ansible are installed before proceeding. You may find these Ubuntu/Debian commands useful:
+  * ```shell
+    sudo apt update
+    sudo apt install python3
+    sudo apt install python3-pip
+    sudo apt install ansible
 - cd into whichever directory you would like to download the project into.
 - ```shell
   git clone https://github.com/DiospyrosD/NetworkAutomationProject.git
