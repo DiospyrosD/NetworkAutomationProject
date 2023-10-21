@@ -18,8 +18,7 @@ Our Final CAP Project
 # Instructions
 - cd into whichever directory you would like to download the project into.
 - ```shell
-- git clone https://github.com/DiospyrosD/NetworkAutomationProject.git
-- ```
+  git clone https://github.com/DiospyrosD/NetworkAutomationProject.git```
 - run `cd NetworkAutomationProject`
 - run `ansible-playbook create_network.yml` to create the network. If issues occur or the playbook is interrupted, run the 'destroy' playbook before re-installing.
 - run `ansible-playbook destroy_network.yml` to remove the network from your machine.
