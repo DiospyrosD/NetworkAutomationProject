@@ -1,0 +1,79 @@
+{% for subnet in network.subnets %}
+{% if subnet.bridge == "no" %}
+#when IPs are created, routes are atuomatically created by the kernel. Delete these...
+sudo ip netns exec {{ subnet.subnet_id }} ip route del {{ subnet.subnet_ip }}{{ subnet.cidr }}
+{% endif %}
+{% endfor %}
+
+{% for host in network.hosts %}
+{% for subnet in network.subnets %}
+{% if host.vlan == subnet.vlan %}
+{% if subnet.bridge == "no" %}
+sudo ip netns exec {{ host.name }} ip route del {{ subnet.subnet_ip }}{{ subnet.cidr }}
+{% endif %}
+{% endif %}
+{% endfor %}
+{% endfor %}
+
+{% for subnet in network.subnets %}
+{% for router in network.routers %}
+{% if subnet.bridge == "no" %}
+sudo ip netns exec {{ router.subnet_id }} ip route del {{ subnet.subnet_ip }}{{ subnet.cidr }}
+{% endif %}
+{% endfor %}
+{% endfor %}
+
+{% for router in network.routers %}
+{% set items = router.interface1 %}
+{% set key1, value1 = items[0].items() | first%}
+{% set key2, value2 = items[1].items() | first %}
+# create veth pair from core to host and vice versa
+sudo ip link add {{ key1 }} type veth peer name {{ key2 }}
+# place this veth into the core namespace
+sudo ip link set dev {{ key2 }} netns {{ router.subnet_id }}
+# assign an IP address to both interfaces and turn up core2host
+sudo ip netns exec {{ router.subnet_id }} ip addr add {{ value2 }} dev {{ key2 }}
+sudo ip netns exec {{ router.subnet_id }} ip link set dev {{ key2 }} up
+sudo ip addr add {{ value1 }} dev {{ key1 }}
+#sudo ip netns exec core ip route del 10.1.0.0/24 &> /dev/null #this may not be needed run a ip route show
+#add a default route to the host2core device
+sudo ip netns exec {{ router.subnet_id }} ip route add default dev {{ key2 }} via {{ value1 }} onlink
+{% endfor %}
+
+{% for subnet in network.subnets %}
+{% for router in network.routers %}
+{% if subnet.bridge == "no" %}
+#Add routes from the core namespace to specific subnets pointing at osv interfaces
+sudo ip netns exec {{ router.subnet_id }} ip route add {{ subnet.subnet_ip }}{{ subnet.cidr }} dev {{ router.subnet_id }}_{{ subnet.vlan }}
+{% endif %}
+{% endfor %}
+{% endfor %}
+
+{% for router in network.routers %}
+{% set items = router.interface1 %}
+{% set key1, value1 = items[0].items() | first %}
+{% set key2, value2 = items[1].items() | first %}
+# Configure NAT (Network Address Translation) for POSTROUTING iptable chain. 
+# Replaces the source IP address of the packet with the address of the outgoing interface
+sudo ip netns exec {{ router.subnet_id }} iptables -t nat -A POSTROUTING -j MASQUERADE
+#sudo ip route del 10.1.0.0/20 &> /dev/null #this may not be needed run a ip route show
+sudo ip route add {{ router.sum_subnet }} via {{ value2 }} dev {{ key1 }} onlink
+{% endfor %}
+
+{% for router in network.routers %}
+{% set items = router.interface1 %}
+{% set key1, value1 = items[0].items() | first %}
+{% set key2, value2 = items[1].items() | first %}
+# Enable IP forwarding in the kernel to allow the system to forward packets between network interfaces.
+echo 1 | sudo tee /proc/sys/net/ipv4/ip_forward
+# Flush (delete) all rules in the filter table of iptables
+sudo iptables -t filter -F
+# Flush (delete) all rules in the nat table of iptables.
+sudo iptables -t nat -F
+# Add an iptables rule in the nat table to perform Network Address Translation (NAT) for outgoing packets from the specified source IP range.
+sudo iptables -t nat    -A POSTROUTING -s {{ router.sum_subnet }} -o ens3 -j MASQUERADE
+# Allow forwarding of packets from interface ens3 to interface host2core.
+sudo iptables -t filter -A FORWARD -i ens3 -o {{ key1 }} -j ACCEPT
+# Allow forwarding of packets from interface host2core to interface ens3.
+sudo iptables -t filter -A FORWARD -o ens3 -i {{ key1 }} -j ACCEPT
+{% endfor %}
