@@ -59,3 +59,11 @@
 
   - name: build hosts -- execute file
     script: /tmp/build_hosts.sh
+
+  - name: set up NAT -- create tmp file
+    template:
+      src: set_up_nat.j2
+      dest: /tmp/set_up_nat.sh
+
+  - name: set up NAT -- execute file
+    script: /tmp/set_up_nat.sh
