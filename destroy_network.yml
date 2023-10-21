@@ -30,8 +30,8 @@
       state: absent
     loop: "{{ network.hosts }}"
 
-  - name: Delete KVM VM Bridge(s)
-    command: sudo ip link del dev br0
+  - name: Delete KVM VM
+    command: sudo bash vm_delete.sh
 
   - name: Remove port forwarding for the flask server as a security measure
     command: sudo iptables -P FORWARD DROP && sudo iptables -F FORWARD && sudo iptables -t nat -F
