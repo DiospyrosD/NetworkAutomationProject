@@ -35,11 +35,11 @@
 
   - name: build switches -- create tmp file
     template:
-      src: build_switch.j2
-      dest: /tmp/build_switch.sh
+      src: build_switch_port.j2
+      dest: /tmp/build_switch_port.sh
 
   - name: build switch -- execute file
-    script: /tmp/build_switch.sh
+    script: /tmp/build_switch_port.sh
     ignore_errors: yes
 
   - name: build router -- create tmp file
