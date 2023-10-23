@@ -12,27 +12,16 @@ def gen_keys():
         os.makedirs(keys_dir, exist_ok=True)
         # Change the umask for key file permissions
         os.umask(0o077)
-
+        
         # Key generation
         keys = ["bravo", "charlie", "bchd"]
         for key in keys:
             private_key = subprocess.run([f"sudo -u student wg genkey | tee {keys_dir}/{key}.key | wg pubkey > {keys_dir}/{key}.pub"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, shell=True, check=False, input="\n", executable="/bin/bash", cwd="/home/student/wg/keys")
-            print(private_key.stdout, "HELLLLLOOOOO")
-
-            # Save the keys to files
-            # with open(os.path.join(f"/home/student/wg/keys/{key}.key"), "w") as private_file:
-            #     private_file.write(private_key.stdout)
-            #     subprocess.run([f"cat /home/student/wg/keys/{key}.key | base64 -d | wg pubkey > /home/student/wg/keys/{key}.pub"], shell=True, check=True)
-            #with open(os.path.join(f"/home/student/wg/keys/{key}.pub"), "w") as public_file:
-                
-                #public_file.write(public_key.stdout)
-
+            #print(private_key.stdout, "HELLLLLOOOOO")
         set_perms = f"sudo -u student chmod 700 {keys_dir}/*"
         chown_command = f"sudo chown student:student {keys_dir}/*"
         subprocess.run(chown_command, shell=True, check=True)
         subprocess.run(set_perms, shell=True, check=True)
-
-
 
     except Exception as e:
         print(f"An error occurred: {e}")
@@ -56,13 +45,6 @@ def execute_commands(WG_BRAVO_PUB, WG_BRAVO_KEY, WG_CHARLIE_PUB, WG_CHARLIE_KEY,
 
         # Create directories and variables
         subprocess.run(["sudo -u student mkdir -p /home/student/wg"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, shell=True, check=False, input="\n", executable="/bin/bash", cwd="/")
-        #os.chdir("/home/student/wg")
-        #script_path = "/home/student/wg/env_var.sh"
-        #os.system('source /home/student/wg/env_var.sh')
-        #subprocess.run([f"source {script_path}"], shell=True, executable='/bin/bash')
-        # output = subprocess.check_output('cat /home/student/wg/keys/bravo.pub', shell=True, executable='/bin/bash')
-        # print("HEOOOOOOOOOOOOOOOO", output)
-        # Define the file paths
         bravo_pub_path = "/home/student/wg/keys/bravo.pub"
         bravo_key_path = "/home/student/wg/keys/bravo.key"
         charlie_pub_path = "/home/student/wg/keys/charlie.pub"
@@ -214,14 +196,17 @@ def configure_wireguard_on_bravo():
 
     # Configure WireGuard on the remote hostguard (bravo)
     #create_wg0="ssh bravo   sudo ip link add dev wg0 type wireguard"
-    subprocess.run(["ssh bravo sudo ip netns add warp"], shell=True, check=False)
+    subprocess.run(["ssh bravo sudo ip netns add core"], shell=True, check=False)
     subprocess.run(["ssh bravo sudo ip link add dev wg0 type wireguard"], shell=True, check=False)
-    subprocess.run(["ssh bravo sudo ip link set wg0 netns warp"], shell=True, check=False)
-    subprocess.run(["ssh bravo sudo ip netns exec warp wg setconf wg0 /etc/wireguard/wg0.conf"], shell=True, check=False)
-    subprocess.run(["ssh bravo sudo ip -n warp -4 address add 10.65.0.1/32 dev wg0"], shell=True, check=False)
-    subprocess.run(["ssh bravo sudo ip -n warp link set mtu 1420 up dev wg0"], shell=True, check=False)
-    subprocess.run(["ssh bravo sudo ip -n warp -4 route add 10.66.0.0/16 dev wg0"], shell=True, check=False)
-    subprocess.run(["ssh bravo sudo ip -n warp -4 route add 10.67.0.1/32 dev wg0"], shell=True, check=False)
+    subprocess.run(["ssh bravo sudo ip link set wg0 netns core"], shell=True, check=False)
+    subprocess.run(["ssh bravo sudo ip netns exec core wg setconf wg0 /etc/wireguard/wg0.conf"], shell=True, check=False)
+    subprocess.run(["ssh bravo sudo ip -n core -4 address add 10.65.0.1/32 dev wg0"], shell=True, check=False)
+    subprocess.run(["ssh bravo sudo ip -n core link set mtu 1420 up dev wg0"], shell=True, check=False)
+    subprocess.run(["ssh bravo sudo ip -n core -4 route add 10.66.0.0/16 dev wg0"], shell=True, check=False)
+    subprocess.run(["ssh bravo sudo ip -n core -4 route add 10.67.0.1/32 dev wg0"], shell=True, check=False)
+    subprocess.run(["ssh bravo sudo ip -n core -4 route add 10.1.0.0/20 dev wg0"], shell=True, check=False)
+    subprocess.run(["ssh bravo sudo ip netns exec core ip route add default dev wg0 via 10.65.0.1 onlink"], shell=True, check=False)
+
 
 def configure_wireguard_on_bchd():
     # Create the directory for configuration files
@@ -235,14 +220,16 @@ def configure_wireguard_on_bchd():
 
     # Configure WireGuard on the remote hostguard (bchd)
     #create_wg0="ssh bchd   sudo ip link add dev wg0 type wireguard"
-    subprocess.run(["ssh bchd sudo ip netns add warp"], shell=True, check=False)
+    #subprocess.run(["ssh bchd sudo ip netns add core"], shell=True, check=False)
     subprocess.run(["ssh bchd sudo ip link add wg0 type wireguard"], shell=True, check=False)
-    subprocess.run(["ssh bchd sudo ip link set wg0 netns warp"], shell=True, check=False)
-    subprocess.run(["ssh bchd sudo ip netns exec warp wg setconf wg0 /etc/wireguard/wg0.conf"], shell=True, check=False)
-    subprocess.run(["ssh bchd sudo ip -n warp -4 address add 10.67.0.1/32 dev wg0"], shell=True, check=False)
-    subprocess.run(["ssh bchd sudo ip -n warp link set mtu 1500 up dev wg0"], shell=True, check=False)
-    subprocess.run(["ssh bchd sudo ip -n warp -4 route add 10.65.0.0/16 dev wg0"], shell=True, check=False)
-    subprocess.run(["ssh bchd sudo ip -n warp -4 route add 10.66.0.0/16 dev wg0"], shell=True, check=False)
+    subprocess.run(["ssh bchd sudo ip link set wg0 netns core"], shell=True, check=False)
+    subprocess.run(["ssh bchd sudo ip netns exec core wg setconf wg0 /etc/wireguard/wg0.conf"], shell=True, check=False)
+    subprocess.run(["ssh bchd sudo ip -n core -4 address add 10.67.0.1/32 dev wg0"], shell=True, check=False)
+    subprocess.run(["ssh bchd sudo ip -n core link set mtu 1500 up dev wg0"], shell=True, check=False)
+    subprocess.run(["ssh bchd sudo ip -n core -4 route add 10.65.0.0/16 dev wg0"], shell=True, check=False)
+    subprocess.run(["ssh bchd sudo ip -n core -4 route add 10.66.0.0/16 dev wg0"], shell=True, check=False)
+    subprocess.run(["ssh bchd sudo ip -n core -4 route add 10.1.0.0/20 dev wg0"], shell=True, check=False)
+
 
 def configure_wireguard_on_charlie():
     # Create the directory for configuration files
@@ -256,24 +243,42 @@ def configure_wireguard_on_charlie():
 
     # Configure WireGuard on the remote hostguard (charlie))
     #create_wg0="ssh bravo   sudo ip link add dev wg0 type wireguard"
-    subprocess.run(["ssh charlie sudo ip netns add warp"], shell=True, check=False)
+    subprocess.run(["ssh charlie sudo ip netns add core"], shell=True, check=False)
     subprocess.run(["ssh charlie sudo ip link add dev wg0 type wireguard"], shell=True, check=False)
-    subprocess.run(["ssh charlie sudo ip link set wg0 netns warp"], shell=True, check=False)
-    subprocess.run(["ssh charlie sudo ip netns exec warp wg setconf wg0 /etc/wireguard/wg0.conf"], shell=True, check=False)
-    subprocess.run(["ssh charlie sudo ip -n warp -4 address add 10.66.0.1/32 dev wg0"], shell=True, check=False)
-    subprocess.run(["ssh charlie sudo ip -n warp link set mtu 1420 up dev wg0"], shell=True, check=False)
-    subprocess.run(["ssh charlie sudo ip -n warp -4 route add 10.65.0.0/16 dev wg0"], shell=True, check=False)
-    subprocess.run(["ssh charlie sudo ip -n warp -4 route add 10.67.0.1/32 dev wg0"], shell=True, check=False)
+    subprocess.run(["ssh charlie sudo ip link set wg0 netns core"], shell=True, check=False)
+    subprocess.run(["ssh charlie sudo ip netns exec core wg setconf wg0 /etc/wireguard/wg0.conf"], shell=True, check=False)
+    subprocess.run(["ssh charlie sudo ip -n core -4 address add 10.66.0.1/32 dev wg0"], shell=True, check=False)
+    subprocess.run(["ssh charlie sudo ip -n core link set mtu 1420 up dev wg0"], shell=True, check=False)
+    subprocess.run(["ssh charlie sudo ip -n core -4 route add 10.65.0.0/16 dev wg0"], shell=True, check=False)
+    subprocess.run(["ssh charlie sudo ip -n core -4 route add 10.67.0.1/32 dev wg0"], shell=True, check=False) #10.1.0.0/20
+    subprocess.run(["ssh charlie sudo ip -n core -4 route add 10.1.0.0/20 dev wg0"], shell=True, check=False)
+    subprocess.run(["ssh charlie sudo ip netns exec core ip route add default dev wg0 via 10.66.0.1 onlink"], shell=True, check=False)
 
 def execute_ping_commands():
     # Define the commands and their corresponding comments
     commands = [
-        ("sudo ip netns exec warp ping 10.65.0.1 -c 1 -W 1", "PING from BCHD to BRAVO"),
-        ("sudo ip netns exec warp ping 10.66.0.1 -c 1 -W 1", "PING from BCHD to CHARLIE"),
-        ("ssh bravo sudo ip netns exec warp ping 10.66.0.1 -c 1 -W 1", "PING from BRAVO to CHARLIE"),
-        ("ssh bravo sudo ip netns exec warp ping 10.67.0.1 -c 1 -W 1", "PING from BRAVO to BCHD"),
-        ("ssh charlie sudo ip netns exec warp ping 10.65.0.1 -c 1 -W 1", "PING from CHARLIE to BRAVO"),
-        ("ssh charlie sudo ip netns exec warp ping 10.67.0.1 -c 1 -W 1", "PING from CHARLIE to BCHD")
+        ("sudo ip netns exec core ping 10.65.0.1 -c 1 -W 1", "PING from BCHD (wg0) to BRAVO (wg0)"),
+        ("sudo ip netns exec core ping 10.66.0.1 -c 1 -W 1", "PING from BCHD (wg0) to CHARLIE (wg0)"),
+        ("ssh bravo sudo ip netns exec core ping 10.66.0.1 -c 1 -W 1", "PING from BRAVO (wg0) to CHARLIE (wg0)"),
+        ("ssh bravo sudo ip netns exec core ping 10.67.0.1 -c 1 -W 1", "PING from BRAVO (wg0) to BCHD (wg0)"),
+        ("ssh charlie sudo ip netns exec core ping 10.65.0.1 -c 1 -W 1", "PING from CHARLIE (wg0) to BRAVO (wg0)"),
+        ("ssh charlie sudo ip netns exec core ping 10.67.0.1 -c 1 -W 1", "PING from CHARLIE (wg0) to BCHD (wg0)"),
+        ("sudo ip netns exec whiskey ping 10.65.0.1 -c 1 -W 1", "PING from WHISKEY to BRAVO (wg0)"), 
+        ("sudo ip netns exec whiskey ping bravo -c 1 -W 1", "PING from WHISKEY to BRAVO"), 
+        ("sudo ip netns exec xray ping 10.65.0.1 -c 1 -W 1", "PING from XRAY to BRAVO (wg0)"),
+        ("sudo ip netns exec xray ping bravo -c 1 -W 1", "PING from XRAY to BRAVO"),  
+        ("sudo ip netns exec yankee ping 10.65.0.1 -c 1 -W 1", "PING from YANKEE to BRAVO (wg0)"),
+        ("sudo ip netns exec yankee ping bravo -c 1 -W 1", "PING from YANKEE to BRAVO"), 
+        ("sudo ip netns exec zulu ping 10.65.0.1 -c 1 -W 1", "PING from ZULU to BRAVO (wg0)"), 
+        ("sudo ip netns exec zulu ping bravo -c 1 -W 1", "PING from ZULU to BRAVO"), 
+        ("sudo ip netns exec whiskey ping 10.66.0.1 -c 1 -W 1", "PING from WHISKEY to CHARLIE (wg0)"), 
+        ("sudo ip netns exec whiskey ping charlie -c 1 -W 1", "PING from WHISKEY to CHARLIE"), 
+        ("sudo ip netns exec xray ping 10.66.0.1 -c 1 -W 1", "PING from XRAY to CHARLIE (wg0)"),
+        ("sudo ip netns exec xray ping charlie -c 1 -W 1", "PING from XRAY to CHARLIE"),  
+        ("sudo ip netns exec yankee ping 10.66.0.1 -c 1 -W 1", "PING from YANKEE to CHARLIE (wg0)"),
+        ("sudo ip netns exec yankee ping charlie -c 1 -W 1", "PING from YANKEE to CHARLIE"), 
+        ("sudo ip netns exec zulu ping 10.66.0.1 -c 1 -W 1", "PING from ZULU to CHARLIE (wg0)"), 
+        ("sudo ip netns exec zulu ping charlie -c 1 -W 1", "PING from ZULU to CHARLIE"),
     ]
 
     # Iterate through the commands and execute them
