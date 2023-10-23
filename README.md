@@ -36,4 +36,5 @@ Our Final CAP Project
 - run `sudo python3 vm_deploy.py` to create a VM. The current program allows for 1 VM to be created pulling interface names/IP addresses from the network_topology.yml.
   * You may be prompted to select `enter` for "OK" to acknowledge that a newer version of the kernel is available.
   * The default login is `root` with a password of `alta3`.
-- run `wireguard.py` (no sudo) to launch a script that connects wireguard to three hosts (i.e., charlie, bravo, and bchd). This script is meant for a custom environment built by alta3.
+- run `python3 wg.py` (no sudo) to launch a script that connects wireguard to three hosts (i.e., charlie, bravo, and bchd). This script is meant for a custom environment built by alta3.
+  * You may destroy your wireguard environment by executing `bash wg_destroy.sh`
