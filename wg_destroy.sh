@@ -1,4 +1,4 @@
-#!/bin/bash
+!/bin/bash
 set -euox pipefail
 
 # Uninstall
@@ -11,11 +11,11 @@ ssh-keygen -H
 rm ~/.ssh/known_hosts.old
 
 sudo ip link del dev wg0 type wireguard
-ssh bravo   sudo ip link del dev wg0 type wireguard
+ssh bravo sudo ip link del dev wg0 type wireguard
 ssh charlie sudo ip link del dev wg0 type wireguard
-ssh charlie sudo ip netns delete warp
-ssh bravo sudo ip netns delete warp
-sudo ip netns delete warp
+ssh charlie sudo ip netns delete core
+ssh bravo sudo ip netns delete core
+sudo ip netns delete core
 
 sudo rm /etc/wireguard/wg0.conf
 ssh bravo   sudo rm /etc/wireguard/wg0.conf
