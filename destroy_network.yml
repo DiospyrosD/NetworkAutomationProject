@@ -34,5 +34,13 @@
     command: sudo bash vm_delete.sh
 
   - name: Remove port forwarding for the flask server as a security measure
-    command: sudo iptables -P FORWARD DROP && sudo iptables -F FORWARD && sudo iptables -t nat -F
+    command: sudo iptables -P FORWARD DROP
+    ignore_errors: yes
+
+  - name: Remove port forwarding for the flask server as a security measure
+    command: sudo iptables -F FORWARD
+    ignore_errors: yes
+
+  - name: Remove port forwarding for the flask server as a security measure
+    command: sudo iptables -t nat -F
     ignore_errors: yes
