@@ -21,3 +21,5 @@ sudo rm /etc/wireguard/wg0.conf
 ssh bravo   sudo rm /etc/wireguard/wg0.conf
 ssh charlie sudo rm /etc/wireguard/wg0.conf
 popd
+
+sudo iptables -P FORWARD DROP && sudo iptables -F FORWARD && sudo iptables -t nat -F
