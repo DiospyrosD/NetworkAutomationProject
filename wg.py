@@ -26,7 +26,7 @@ def gen_keys():
     except Exception as e:
         print(f"An error occurred: {e}")
 
-def execute_commands(WG_BRAVO_PUB, WG_BRAVO_KEY, WG_CHARLIE_PUB, WG_CHARLIE_KEY, WG_BCHD_PUB, WG_BCHD_KEY): 
+def execute_commands(WG_BRAVO_PUB, WG_BRAVO_KEY, WG_CHARLIE_PUB, WG_CHARLIE_KEY, WG_BCHD_PUB, WG_BCHD_KEY, BRAVO_IP, BCHD_IP, CHARLIE_IP): 
     try:
         # Install j2cli
         subprocess.run(["python3", "-m", "pip", "install", "--user", "j2cli"])
@@ -67,6 +67,15 @@ def execute_commands(WG_BRAVO_PUB, WG_BRAVO_KEY, WG_CHARLIE_PUB, WG_CHARLIE_KEY,
         WG_CHARLIE_KEY = WG_CHARLIE_KEY.strip()
         WG_BCHD_PUB = WG_BCHD_PUB.strip()
         WG_BCHD_KEY = WG_BCHD_KEY.strip()
+        BRAVO_IP = subprocess.run(["dig +short +search bravo"], stdout=subprocess.PIPE, shell=True, check=True)
+        BRAVO_IP = BRAVO_IP.stdout.decode().strip()
+        BCHD_IP = subprocess.run(["dig +short +search bchd"], stdout=subprocess.PIPE, shell=True, check=True)
+        BCHD_IP = BCHD_IP.stdout.decode().strip()
+        CHARLIE_IP = subprocess.run(["dig +short +search charlie"], stdout=subprocess.PIPE, shell=True, check=True)
+        CHARLIE_IP = CHARLIE_IP.stdout.decode().strip()
+        print(CHARLIE_IP)
+        print(BCHD_IP)
+        print(BRAVO_IP)
         print("SHOULD BE HERE")
         print(WG_BCHD_PUB)
     except subprocess.CalledProcessError as e:
@@ -74,9 +83,9 @@ def execute_commands(WG_BRAVO_PUB, WG_BRAVO_KEY, WG_CHARLIE_PUB, WG_CHARLIE_KEY,
         print(f"Return code: {e.returncode}")
         print(f"Error output: {e.stderr}")
         raise
-    return WG_BRAVO_PUB, WG_BRAVO_KEY, WG_CHARLIE_PUB, WG_CHARLIE_KEY, WG_BCHD_PUB, WG_BCHD_KEY 
+    return WG_BRAVO_PUB, WG_BRAVO_KEY, WG_CHARLIE_PUB, WG_CHARLIE_KEY, WG_BCHD_PUB, WG_BCHD_KEY, BRAVO_IP, BCHD_IP, CHARLIE_IP
 
-def create_bravo_conf_j2(WG_BRAVO_KEY, WG_CHARLIE_PUB, WG_BCHD_PUB):
+def create_bravo_conf_j2(WG_BRAVO_KEY, WG_CHARLIE_PUB, WG_BCHD_PUB, BCHD_IP, CHARLIE_IP):
     directory_path = "/home/student/wg/j2"
     file_path = os.path.join(directory_path, "bravo.conf.j2")
 
@@ -97,14 +106,14 @@ ListenPort = 51820
 # name = charlie - KVM server with a local slash 16: 10.66.0.0/26
 PublicKey = { WG_CHARLIE_PUB }
 AllowedIPs = 10.66.0.0/16
-Endpoint = 10.4.163.216:51820
+Endpoint = { CHARLIE_IP }:51820
 PersistentKeepalive = 25
 
 [Peer]
 # Name = bchd
 PublicKey = { WG_BCHD_PUB }
 AllowedIPs = 10.67.0.1/32
-Endpoint = 10.14.179.205:51820
+Endpoint = { BCHD_IP }:51820
 PersistentKeepalive = 25
 """
 
@@ -112,7 +121,7 @@ PersistentKeepalive = 25
     with open(file_path, "w") as file:
         file.write(config_content)
 
-def create_bchd_conf_j2(WG_BCHD_KEY, WG_CHARLIE_PUB, WG_BRAVO_PUB):
+def create_bchd_conf_j2(WG_BCHD_KEY, WG_CHARLIE_PUB, WG_BRAVO_PUB, BRAVO_IP, CHARLIE_IP):
     directory_path = "/home/student/wg/j2"
     file_path = os.path.join(directory_path, "bchd.conf.j2")
 
@@ -133,14 +142,14 @@ ListenPort = 51820
 # name = charlie - KVM server with a local slash 16: 10.66.0.0/26
 PublicKey = { WG_CHARLIE_PUB }
 AllowedIPs = 10.66.0.0/16
-Endpoint = 10.4.163.216:51820
+Endpoint = { CHARLIE_IP }:51820
 PersistentKeepalive = 25
 
 [Peer]
 # Name = bravo
 PublicKey = { WG_BRAVO_PUB }
 AllowedIPs = 10.65.0.0/16
-Endpoint = 10.7.181.253:51820
+Endpoint = { BRAVO_IP }:51820
 PersistentKeepalive = 25
 """
 
@@ -148,7 +157,7 @@ PersistentKeepalive = 25
     with open(file_path, "w") as file:
         file.write(config_content)
 
-def create_charlie_conf_j2(WG_CHARLIE_KEY, WG_BRAVO_PUB, WG_BCHD_PUB):
+def create_charlie_conf_j2(WG_CHARLIE_KEY, WG_BRAVO_PUB, WG_BCHD_PUB, BRAVO_IP, BCHD_IP):
     directory_path = "/home/student/wg/j2"
     file_path = os.path.join(directory_path, "charlie.conf.j2")
 
@@ -169,14 +178,14 @@ ListenPort = 51820
 # name = BCHD - KVM server with a local slash 16: 10.66.0.0/26
 PublicKey = { WG_BCHD_PUB }
 AllowedIPs = 10.67.0.1/32
-Endpoint = 10.14.179.205:51820
+Endpoint = { BCHD_IP }:51820
 PersistentKeepalive = 25
 
 [Peer]
 # Name = bravo
 PublicKey = { WG_BRAVO_PUB }
 AllowedIPs = 10.65.0.0/16
-Endpoint = 10.7.181.253:51820
+Endpoint = { BRAVO_IP }:51820
 PersistentKeepalive = 25
 """
 
@@ -294,11 +303,14 @@ if __name__ == "__main__":
     WG_CHARLIE_PUB=""
     WG_BCHD_KEY=""
     WG_BCHD_PUB=""
+    BRAVO_IP=""
+    BCHD_IP=""
+    CHARLIE_IP=""
     gen_keys()
-    WG_BRAVO_PUB, WG_BRAVO_KEY, WG_CHARLIE_PUB, WG_CHARLIE_KEY, WG_BCHD_PUB, WG_BCHD_KEY=execute_commands(WG_BRAVO_PUB, WG_BRAVO_KEY, WG_CHARLIE_PUB, WG_CHARLIE_KEY, WG_BCHD_PUB, WG_BCHD_KEY)
-    create_bravo_conf_j2(WG_BRAVO_KEY, WG_CHARLIE_PUB, WG_BCHD_PUB)
-    create_bchd_conf_j2(WG_BCHD_KEY, WG_CHARLIE_PUB, WG_BRAVO_PUB)
-    create_charlie_conf_j2(WG_CHARLIE_KEY, WG_BRAVO_PUB, WG_BCHD_PUB)
+    WG_BRAVO_PUB, WG_BRAVO_KEY, WG_CHARLIE_PUB, WG_CHARLIE_KEY, WG_BCHD_PUB, WG_BCHD_KEY, BRAVO_IP, BCHD_IP, CHARLIE_IP=execute_commands(WG_BRAVO_PUB, WG_BRAVO_KEY, WG_CHARLIE_PUB, WG_CHARLIE_KEY, WG_BCHD_PUB, WG_BCHD_KEY, BRAVO_IP, BCHD_IP, CHARLIE_IP)
+    create_bravo_conf_j2(WG_BRAVO_KEY, WG_CHARLIE_PUB, WG_BCHD_PUB, BCHD_IP, CHARLIE_IP)
+    create_bchd_conf_j2(WG_BCHD_KEY, WG_CHARLIE_PUB, WG_BRAVO_PUB, BRAVO_IP, CHARLIE_IP)
+    create_charlie_conf_j2(WG_CHARLIE_KEY, WG_BRAVO_PUB, WG_BCHD_PUB, BRAVO_IP, BCHD_IP)
     # Call the function to configure WireGuard on bravo
     configure_wireguard_on_bravo()
     configure_wireguard_on_bchd()
