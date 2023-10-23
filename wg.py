@@ -279,7 +279,7 @@ def execute_ping_commands():
     # Iterate through the commands and execute them
     for command, comment in commands:
         print(f"\033[92m{comment}\033[0m")  # Print comment in green
-        subprocess.run(command, shell=True, check=True)
+        subprocess.run(command, shell=True, check=False)
 
 
 if __name__ == "__main__":
