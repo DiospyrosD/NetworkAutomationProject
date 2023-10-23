@@ -38,3 +38,5 @@ Our Final CAP Project
   * The default login is `root` with a password of `alta3`.
 - run `python3 wg.py` (no sudo) to launch a script that connects wireguard to three hosts (i.e., charlie, bravo, and bchd). This script is meant for a custom environment built by alta3.
   * You may destroy your wireguard environment by executing `bash wg_destroy.sh`
+ 
+    ![Screenshot](network_diagram.png)
